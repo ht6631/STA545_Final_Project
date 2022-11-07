@@ -1,0 +1,174 @@
+---
+title: "Final Project - Group 14"
+author: |
+    | Hang Tian
+    | UB PERSON ID: 50413372
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1) # seed for any random generation
+```
+
+
+# 1. "Read data and some plots"
+
+## Read data.
+```{r}
+suppressPackageStartupMessages(library(tidyverse)) # just in case
+library(ISLR2)
+library(tidyverse)
+library(dplyr)
+suppressPackageStartupMessages(library(glmnet)) # penalized linear models
+suppressPackageStartupMessages(library(glmnetUtils))  # for quality of life functions over glmnet
+suppressPackageStartupMessages(library(corrplot)) # correlation plots
+suppressPackageStartupMessages(library(pls)) # for pcr
+setwd("~/Semester files/STA 545/STA545_Final_Project")
+#call data
+bs_hour=read_csv('Bike-Sharing-Dataset/hour.csv',show_col_types = FALSE)
+```
+
+```{r}
+col_vec=colnames(bs_hour)[2:16]
+for (value in col_vec) {
+    print(ggplot(bs_hour)+geom_point(aes_string(value,'cnt'))+theme_bw())
+}
+cor(bs_hour[, -2]) %>% 
+  corrplot::corrplot()
+```
+
+## b.
+```{r}
+#Returns coefficients for a subset of default
+boot.fn <- function(data, index) {
+  coef(glm(default ~ student + balance + income, data = data, subset = index,family=binomial))[3:4]
+}
+```
+
+## c.
+```{r}
+library(boot)
+set.seed(1)
+boot_result=boot(Default, boot.fn, 1000)
+boot_result
+```
+
+\large Standard error for 'balance': 2.38e-04; Standard error for 'income': 8.53e-06.\newline Those from glm() function are 2.32e-04, 8.20e-06, respectively.  \normalsize
+
+## d.
+```{r}
+set.seed(1)
+#bootstrap result CI
+apply(boot_result$t, 2, function(x) quantile(x, c(0.025, 0.975))) %>% 
+  t()
+```
+
+\large Bootstrap result: \newline 95% CI for 'balance': (5.31e-03, 6.23e-03) \newline 95% CI for 'balance': (-1.36e-05 1.96e-05)  \normalsize
+
+```{r}
+set.seed(1)
+confint(glm.fits,level=0.95)
+```
+
+\large glm() function result: \newline 95% CI for 'balance': (5.29e-03, 6.20e-03) \newline 95% CI for 'income': (-1.30e-05 1.91e-05)  \normalsize
+
+# 2. "Problem 2"
+
+## a.
+```{r}
+data(Auto)
+median_mpg=median(Auto$mpg)
+rownames(Auto)=c(1:dim(Auto)[1])
+Auto$mpg01=ifelse(Auto$mpg>median_mpg,1,0)%>%as.factor()
+```
+
+## b.
+```{r}
+library(ggplot2)
+pairs(Auto)
+```
+
+```{r,out.width='50%'}
+col_vec=colnames(Auto)[2:8]
+for (value in col_vec) {
+    print(ggplot(Auto)+geom_point(aes_string(value,'mpg')))
+}
+for (value in col_vec) {
+    print(ggplot(Auto)+geom_boxplot(aes_string("mpg",value,group="mpg01",color="mpg01")))
+}
+```
+
+\large From these plots, it seems every predictor ('name' excluded) are correlated with 'mpg', thus have an effect on  'mpg01'. Those autos consumes more gas (mpg01 = 0) tend to have more 'cylinders', higher 'displacement', 'horsepower' and 'weight' while having lower 'acceleration'. But for the most useful predictor, 'cylinders', 'displacement', 'horsepower' and 'weight' show strong relationship with 'mpg', thus would be considered to have strong effects on 'mpg01'\normalsize
+
+
+## c.
+```{r}
+set.seed(1)
+nrow(Auto)
+train_rows=sample(nrow(Auto),dim(Auto)[1]*0.75)
+training_set=Auto[train_rows,]
+
+temp=Auto[-train_rows,]
+test_rows=sample(as.integer(rownames(temp)),size=dim(Auto)[1]*0.2)
+test_set=Auto[test_rows,]
+left=Auto[-c(train_rows,test_rows), ]
+```
+
+## d.
+```{r}
+library(MASS)
+set.seed(1)
+lda.fit <- MASS::lda(
+  mpg01 ~ cylinders + displacement + horsepower + weight, data = training_set
+)
+lda.fit
+plot(lda.fit)
+###
+lda.pred <- predict(lda.fit, test_set)
+###
+lda.class <- lda.pred$class
+table(lda.class, test_set$mpg01)
+accur_ratio=mean(lda.class == test_set$mpg01)
+test_error_lda=1-accur_ratio
+test_error_lda
+```
+
+\large Test error: 0.115 \normalsize
+## e.
+```{r}
+set.seed(1)
+qda.fit <- MASS::qda(mpg01 ~ cylinders + displacement + horsepower + weight, data = training_set)
+qda.fit
+###
+qda.class <- predict(qda.fit, test_set)$class
+table(qda.class, test_set$mpg01)
+accur_ratio_qda=mean(qda.class == test_set$mpg01)
+test_error_qda=1-accur_ratio_qda
+test_error_qda
+```
+\large Test error: 0.090 \normalsize
+
+## f.
+```{r}
+glm.fits_logi <- glm(
+mpg01 ~ cylinders + displacement + horsepower + weight, data = training_set,family=binomial
+)
+summary(glm.fits_logi)
+###
+summary(glm.fits_logi)$coef[, 4]
+###
+glm.probs <- predict(glm.fits_logi,test_set,type='response')
+###
+
+glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
+###
+table(glm.pred, test_set$mpg01)
+accur_ratio_logi=mean(glm.pred == test_set$mpg01)
+test_error_logi=1-accur_ratio_logi
+test_error_logi
+```
+
+\large Test error: 0.070 \normalsize
