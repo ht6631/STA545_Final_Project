@@ -91,7 +91,7 @@ cor(bs_hour[, -c(1,16)]) %>%
 
 # 2. Problems through the data and answering.
 
-## Would the hourly distributions of bikeshare users on working days / non-working days different, and what about casual / registered users?
+## Question 1. Would the hourly distributions of bikeshare users on working days / non-working days different, and what about casual / registered users?
 ### Total bikeshare users
 ```{r}
 ggplot(bs_hour)+
@@ -106,6 +106,18 @@ ggplot(bs_hour)+
 **Before 6am,** there are a few bike share users for both working-day types while more people on non-working days tend to use bike share from 0am to 2am. \newline
 **From 6am to 11pm,** Two peaks of users are shown around 8am and 5pm on working days, which may reflect commuting during the rush hours. While on non-working days, we saw a smooth increasing then decreasing trend on bike share users.\newline
 
+
+### Registered bikeshare users
+```{r}
+ggplot(bs_hour)+
+  geom_boxplot(aes(hr,registered,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Hour')+ylab('Hourly records')+
+  labs(fill='Workingday',title='Hourly distribution of registered bikeshare users')+
+  scale_x_continuous(breaks=seq(0,24,2))
+```
+**The hourly distribution of registered users are quite like that of the total users.**
+
 ### Casual bikeshare users
 ```{r}
 ggplot(bs_hour)+
@@ -118,14 +130,173 @@ ggplot(bs_hour)+
 **Casual users tend to use bikeshare more often on non-workding days while there is no strong evidence they would use bikeshare for commuting on rush hours.**
 
 
+## Question 2. Would bikeshare users counts on different weather be different, and what about casual / registered users?
+### Total bikeshare users
+```{r}
+ggplot(bs_hour)+
+  geom_boxplot(aes(weathersit,cnt,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Weathersit')+ylab('Hourly records')+
+  labs(fill='Weathersit',title='Total bikeshare users on different weather')
+```
+**Here's the description for weather type 1 - 4:**
+weathersit : \newline
+- 1: Clear, Few clouds, Partly cloudy, Partly cloudy \newline
+- 2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist \newline
+- 3: Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds \newline
+- 4: Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fogv \newline
+From these boxplots, it's obvious that from weather type 1 - 4, people are becoming more unwillingly to use bike share. This makes sense because commonly speaking, ordinary people would see weather type from 1 - 4 as weather getting worse. And for type 4, it's definitely bad weather.\newline
+
 ### Registered bikeshare users
 ```{r}
 ggplot(bs_hour)+
-  geom_boxplot(aes(hr,registered,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
+  geom_boxplot(aes(weathersit,registered,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Weathersit')+ylab('Hourly records')+
+  labs(fill='Weathersit',title='Registered bikeshare users on different weather')
+```
+### Casual bikeshare users
+```{r}
+ggplot(bs_hour)+
+  geom_boxplot(aes(weathersit,casual,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Weathersit')+ylab('Hourly records')+
+  labs(fill='Weathersit',title='Casual bikeshare users on different weather')
+```
+
+## Question 3s. Digging deeper into rush hour patterns. Which would affect people's willingness of using bikeshare during rush hours?
+
+## Question 3s - 1. Influence of weathertype
+First let's find out those records during rush hours and likely to be considered as commuting.
+```{r}
+bs_rush=bs_hour%>%filter(hr %in% c(7,8,9,16,17,18,19))%>%filter(workingday==1)
+bs_rush$hr=as.factor(bs_rush$hr)
+```
+
+### Total bikeshare users
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(hr,cnt,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
   theme_bw()+
   xlab('Hour')+ylab('Hourly records')+
-  labs(fill='Workingday',title='Hourly distribution of registered bikeshare users')+
-  scale_x_continuous(breaks=seq(0,24,2))
+  labs(fill='Weathersit',title='Hourly distribution of total bikeshare users under different weather')
 ```
-**The hourly distribution of registered users are quite like that of the total users.**
+**During the rush hours in the morning**, weather type 1 and 2 seems have similar pattern, a little cloudy weather won't affect people's choice in the morning. Only when weather getting worse to type 3 or 4, people would not willing to ride a bike. \newline
+**However during the evening rush hours**, things are different. As the weather getting worse, even a little cloudy would make people not willing to ride a bike. \newline
+What about for casual or registered users?
+
+### Registered bikeshare users
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(hr,registered,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Hour')+ylab('Hourly records')+
+  labs(fill='Weathersit',title='Hourly distribution of registered bikeshare users under different weather')
+```
+**Similar to total users.**
+
+### Casual bikeshare users
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(hr,casual,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('Hour')+ylab('Hourly records')+
+  labs(fill='Weathersit',title='Hourly distribution of casual bikeshare users under different weather')
+```
+**Weather influences are similar to total users. While as shown in previous hourly distribution of casual users, casual users are more willing to use bikehsare in the afternoon.**
+
+## Question 3s - 2. Influence of feeling temperature, humidity and windspeed
+In this dataset, all the values of meteorological data are normalized. Which makes us easier to classify them into two levels: high and low (or another medium level).
+```{r}
+f=function(x,a){
+  (max(x)-min(x))*a+min(x)
+}
+bs_rush$atemp_rank=ifelse(bs_rush$atemp>=f(bs_rush$atemp,0.5),'High','Low')%>%as.factor()
+bs_rush$windspeed_rank=ifelse(bs_rush$windspeed>=f(bs_rush$windspeed,0.5),'High','Low')%>%as.factor()
+bs_rush$humi_rank=ifelse(bs_rush$hum>=f(bs_rush$hum,0.5),'High','Low')%>%as.factor()
+```
+
+### Total bikeshare users
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(atemp_rank,cnt,
+                   group=atemp_rank,fill=factor(atemp_rank)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('atemp_rank')+ylab('Hourly records')+
+  labs(fill='Atemp rank',title='Influence of feeling temperature')#+guides(fill=guide_legend(ncol=2))
+```
+
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(windspeed_rank,cnt,
+                   group=windspeed_rank,fill=factor(windspeed_rank)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('windspeed_rank')+ylab('Hourly records')+
+  labs(fill='windspeed rank',title='Influence of wind speed')#+guides(fill=guide_legend(ncol=2))
+```
+```{r}
+ggplot(bs_rush)+
+  geom_boxplot(aes(humi_rank,cnt,
+                   group=humi_rank,fill=factor(humi_rank)),outlier.shape = NA)+
+  theme_bw()+
+  xlab('humi_rank')+ylab('Hourly records')+
+  labs(fill='humidity rank',title='Influence of humidity')#+guides(fill=guide_legend(ncol=2))
+```
+
+# 3. Random forest regression to predict hourly bikeshare user counts
+
+```{r,out.width='90%'}
+library(randomForest)
+model_table=bs_rush[,-c(1,6,8,14,15,16)]
+str(model_table)
+model_table$season=as.factor(model_table$season)
+model_table$yr=as.factor(model_table$yr)
+model_table$mnth=as.factor(model_table$mnth)
+model_table$weekday=as.factor(model_table$weekday)
+model_table$weathersit=as.factor(model_table$weathersit)
+
+set.seed(1)
+train_rows=sample(nrow(model_table),dim(model_table)[1]*0.7)
+train_set=model_table[train_rows,]
+test_set=model_table[-train_rows,]
+test_x=test_set[,-11]
+test_y=test_set[,11]
+cnt.rf <- randomForest(cnt ~ ., data = train_set,
+                         importance = TRUE,ntree=400,xtest=test_x,ytest=test_y$cnt,
+                         keep.forest=TRUE)
+print(cnt.rf)
+plot(cnt.rf)
+y_pred=predict(cnt.rf,test_x)
+table=cbind(y_pred,test_y$cnt)%>%as.data.frame()
+colnames(table)=c('y_pred','y_true')
+ggplot(table)+geom_point(aes(y_pred,y_true))+geom_abline(slope=1,intercept=0,color='red')
+```
+
+```{r,out.width='90%'}
+#30 most important attributes
+varImpPlot(cnt.rf, n.var = min(30, nrow(cnt.rf$importance)),
+main = 'Top 30 - variable importance')
+```
+
+```{r}
+library(nlme)
+frm.1 = formula(cnt~season+yr+mnth+hr+weekday+
+                  weathersit+temp+atemp+hum+windspeed+
+                  atemp_rank+windspeed_rank+humi_rank)
+lme.cnt = lme(frm.1,
+             control = lmeControl(opt = "optim"),
+             random=list(~1|hr),
+             data = model_table)
+fittedpm <- data.frame(lme.cnt$fitted)
+# performance at model fitting : 
+result_table=cbind(model_table$cnt,fittedpm$hr)%>%as.data.frame()
+
+thisMSE <- sum((fittedpm[,2]-model_table[,11])^2)/(nrow(fittedpm))
+thisRMSE <- sqrt(thisMSE)
+thisR2 <- 1 - (sum((model_table[,11]-fittedpm[,2])^2)/
+                 sum((model_table[,11]-mean(model_table$cnt))^2))
+thisR2
+colnames(result_table)=c('y_true','y_pred')
+ggplot(result_table)+geom_point(aes(y_pred,y_true))+geom_abline(slope=1,intercept=0,color='red')
+```
 
