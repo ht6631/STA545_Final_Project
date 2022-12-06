@@ -391,3 +391,99 @@ rf.hour.rsq
 ```
 
 The R^2 value is 0.658, meaning 65.8% of the error is explained by the model. 
+
+
+
+# data processing
+```{r}
+set.seed(1)
+
+regression_model=bs_hour%>%filter(hr %in% c(7,8,9,16,17,18,19))%>%filter(workingday==1)
+regression_model=regression_model[,-which(names(regression_model) == "dteday")]
+regression_model=regression_model[,-which(names(regression_model) == "season")]
+regression_model=regression_model[,-which(names(regression_model) == "yr")]
+regression_model=regression_model[,-which(names(regression_model) == "holiday")]
+regression_model=regression_model[,-which(names(regression_model) == "workingday")]
+regression_model=regression_model[,-which(names(regression_model) == "temp")]
+regression_model=regression_model[,-which(names(regression_model) == "casual")]
+regression_model=regression_model[,-which(names(regression_model) == "hourly_id")]
+regression_model=regression_model[,-which(names(regression_model) == "cnt")]
+
+indice_train = sample(seq_len(nrow(regression_model)),size = 0.2*nrow(regression_model))
+indice_test =  seq_len(nrow(regression_model)) %>%
+setdiff(indice_train)
+```
+#pcr
+```{r}
+# fit pcr on training set
+pcr = pcr(registered ~ ., data = regression_model,subset = indice_train)
+y_prediction_pcr = predict(pcr, regression_model[indice_test, ])
+
+## residual sum of squares
+validationplot(pcr, val.type = "R2")
+```
+If we use the 7 variables, we obtain r2 =0,25
+```{r}
+
+pred_error_all = sapply(
+  1:6,
+  function(i) mean((y_prediction_pcr[, , i] - regression_model[indice_test ,]$registered)^2))
+# find which M minimizes prediction error
+pcr$coefficients[, , which.min(pred_error_all)]
+```
+#ridge
+```{r}
+# cross validation based tuning of lambda
+#cv glmnet implement already 10 cross validation
+ridge = cv.glmnet(   
+registered ~ .,
+data = regression_model,
+alpha = 0
+)
+# ridge with optimal lambda
+ridgefit = glmnet(
+registered ~ .,
+data = regression_model,
+alpha = 0,
+lambda = ridge$lambda.1se # optimal lambda
+)
+
+y_pred_ridge = predict(ridgefit, newdata = regression_model)
+
+sst = sum((regression_model$registered - mean(regression_model$registered))^2)
+sse =sum((y_pred_ridge - regression_model$registered)^2)
+
+r2 = 1 - (sse/sst)
+r2
+```
+```{r}
+coef(ridgefit)
+```
+# lasso
+```{r}
+# cross validation based tuning of lambda
+lasso=  cv.glmnet(
+registered ~ .,
+data = regression_model,
+alpha = 1
+)
+# lasso with optimal lambda
+lassofit = glmnet(
+registered ~ .,
+data = regression_model,
+alpha = 1,
+lambda = lasso$lambda.1se # optimal lambda
+)
+# predict on test set
+pred_lasso = predict(lassofit, newdata = regression_model)
+
+
+sst = sum((regression_model$registered - mean(regression_model$registered))^2)
+sse =sum((pred_lasso - regression_model$registered)^2)
+
+r2 = 1 - (sse/sst)
+r2
+```
+```{r}
+coef(lassofit)
+```
