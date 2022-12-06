@@ -300,3 +300,92 @@ colnames(result_table)=c('y_true','y_pred')
 ggplot(result_table)+geom_point(aes(y_pred,y_true))+geom_abline(slope=1,intercept=0,color='red')
 ```
 
+# Re: Comparing the R^2 values of a simple linear regression, decision tree, and random forest
+
+```{r}
+library(leaps)
+library(glmnet)
+library(glmnetUtils)
+library(MASS)
+library(ISLR2)
+library(tidyverse)
+
+library(randomForest) 
+library(gbm)
+
+# This investigation only concerns the rush hours (7AM,8AM,9AM,4PM,5PM,6PM,7PM)
+
+hour_orig <- read_csv('Bike-Sharing-Dataset/hour.csv',show_col_types = FALSE);
+
+# filtering out irrelevant data
+hour.filtered <- subset(hour_orig, workingday >.5)
+hour.filtered <- subset(hour.filtered, hr %in% c(7,8,9,16,17,18,19))
+
+hour <- hour.filtered[,c("mnth","hr","atemp","weathersit","hum","windspeed","registered")]
+```
+
+# Performing a linear regression, and getting the R^2 value.
+
+```{r}
+hour.lm <- lm(registered ~ ., data = hour)
+hour.lm.r2 <- summary(hour.lm)$r.squared
+hour.lm.r2
+```
+
+The r-squared value for linear regression is 0.245, meaning 24.5% of the error is explained by the model. 
+
+# Performing a decision tree analysis and getting the R^2 value. 
+```{r}
+set.seed(1)
+train.hour <- sample(1:nrow(hour), nrow(hour) / 2)
+tree.hour <- rpart(registered ~ ., data = hour, subset = train.hour)
+rpart.plot(tree.hour)
+summary(tree.hour)
+best_cp <- tree.hour$cptable %>% 
+  as_tibble() %>% 
+  filter(xerror == min(xerror)) %>% 
+  head(1) %>% 
+  pull(CP) # note the best CP is 0.01, which corresponds with the most (11) splits
+prune.hour <- prune(tree.hour, cp = best_cp)
+rpart.plot(prune.hour)
+
+yhat <- predict(tree.hour, newdata = hour[-train.hour, ])
+test.hour <- hour[-train.hour, "registered"]
+test.hour <- as.integer(unlist(test.hour))
+plot(yhat, test.hour)
+abline(0, 1)
+mean((yhat - test.hour)^2) 
+tmp <- printcp(tree.hour)
+tree.hour.r2.table <- 1-tmp[,c(3,4)]
+tree.hour.r2 <- tree.hour.r2.table[11,1]
+tree.hour.r2
+```
+
+The R^2 value is 0.540, meaning 54.0% of the error is explained by the model. 
+
+# Performing a random forest and getting the R^2 value.
+
+```{r}
+set.seed(2)
+
+rf.hour <- randomForest(
+  registered ~ .,
+  data = hour,
+  subset = train.hour,
+  # mtry = 5, 
+  importance = TRUE,
+  ntree = 5000
+  
+)
+
+# predict.rf.hour <- predict(rf.hour, test_data, type = "class")
+###
+importance(rf.hour)
+###
+varImpPlot(rf.hour)
+rf.hour.rsq.list  <- rf.hour$rsq
+rf.hour.rsq <- rf.hour.rsq.list[5000]
+rf.hour.rsq
+```
+
+The R^2 value is 0.658, meaning 65.8% of the error is explained by the model. 
