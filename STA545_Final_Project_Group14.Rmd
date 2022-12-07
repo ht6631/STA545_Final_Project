@@ -13,10 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 set.seed(1) # seed for any random generation
 ```
 
+# 1. Abstract
+...
 
-# 1. "Read data and some base plots"
+# 2. Introduction
 
-## Read data and simple processing.
+## a. Data description
+
+### Read data and simple processing.
 ```{r}
 suppressPackageStartupMessages(library(tidyverse)) # just in case
 library(ISLR2)
@@ -28,7 +32,6 @@ suppressPackageStartupMessages(library(glmnet)) # penalized linear models
 suppressPackageStartupMessages(library(glmnetUtils))  # for quality of life functions over glmnet
 suppressPackageStartupMessages(library(corrplot)) # correlation plots
 suppressPackageStartupMessages(library(pls)) # for pcr
-setwd("~/Semester files/STA 545/STA545_Final_Project")
 #call data
 origin_data=read_csv('Bike-Sharing-Dataset/hour.csv',show_col_types = FALSE)
 #Check how many predictors have NAs
@@ -41,7 +44,7 @@ bs_hour=bs_hour[,c(1:15,17,16)]
 bs_hour$windspeed=as.numeric(bs_hour$windspeed)
 ```
 
-## Scatter plots & Box plots for total counts.
+### Scatter plots and box plots.
 ```{r,out.width='50%'}
 col_vec_scatter=colnames(bs_hour)[10:15]
 col_vec_box=colnames(bs_hour)[2:9]
@@ -59,40 +62,13 @@ cor(bs_hour[, -c(1,16)]) %>%
   corrplot::corrplot()
 ```
 
-## Scatter plots & Box plots for casual user counts.
-```{r,out.width='50%'}
-# col_vec_scatter=colnames(bs_hour)[10:13]
-# for (value in col_vec_scatter) {
-#     print(ggplot(bs_hour)+geom_point(aes_string(value,'casual'))+theme_bw()+
-#             theme(axis.title.y=element_text(size=16),
-#         axis.title.x=element_text(size=16)))
-# }
-# for (value in col_vec_box) {
-#     print(ggplot(bs_hour)+geom_boxplot(aes_string(value,'casual',group=value))+theme_bw())+
-#             theme(axis.title.y=element_text(size=16),
-#         axis.title.x=element_text(size=16))
-# }
-```
+## b. Meterials and methods.
 
-## Scatter plots & Box plots for registered user counts.
-```{r,out.width='50%'}
-# col_vec_scatter=colnames(bs_hour)[10:13]
-# for (value in col_vec_scatter) {
-#     print(ggplot(bs_hour)+geom_point(aes_string(value,'registered'))+theme_bw()+
-#             theme(axis.title.y=element_text(size=16),
-#         axis.title.x=element_text(size=16)))
-# }
-# for (value in col_vec_box) {
-#     print(ggplot(bs_hour)+geom_boxplot(aes_string(value,'registered',group=value))+theme_bw())+
-#             theme(axis.title.y=element_text(size=16),
-#         axis.title.x=element_text(size=16))
-# }
-```
+First, our group discovered this dataset for more useful information.
 
-# 2. Problems through the data and answering.
+### Material question 1. Would the hourly distributions of bikeshare users on working days / non-working days different, and what about casual / registered users?
 
-## Question 1. Would the hourly distributions of bikeshare users on working days / non-working days different, and what about casual / registered users?
-### Total bikeshare users
+#### Total bikeshare users
 ```{r}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,cnt,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -107,7 +83,7 @@ ggplot(bs_hour)+
 **From 6am to 11pm,** Two peaks of users are shown around 8am and 5pm on working days, which may reflect commuting during the rush hours. While on non-working days, we saw a smooth increasing then decreasing trend on bike share users.\newline
 
 
-### Registered bikeshare users
+#### Registered bikeshare users
 ```{r}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,registered,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -118,7 +94,7 @@ ggplot(bs_hour)+
 ```
 **The hourly distribution of registered users are quite like that of the total users.**
 
-### Casual bikeshare users
+#### Casual bikeshare users
 ```{r}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,casual,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -130,8 +106,9 @@ ggplot(bs_hour)+
 **Casual users tend to use bikeshare more often on non-workding days while there is no strong evidence they would use bikeshare for commuting on rush hours.**
 
 
-## Question 2. Would bikeshare users counts on different weather be different, and what about casual / registered users?
-### Total bikeshare users
+### Material question 2. Would bikeshare users counts on different weather be different, and what about casual / registered users?
+
+#### Total bikeshare users
 ```{r}
 ggplot(bs_hour)+
   geom_boxplot(aes(weathersit,cnt,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
@@ -139,168 +116,45 @@ ggplot(bs_hour)+
   xlab('Weathersit')+ylab('Hourly records')+
   labs(fill='Weathersit',title='Total bikeshare users on different weather')
 ```
-**Here's the description for weather type 1 - 4:**
+
+**Here's the description for weather type 1 - 4:** \newline
 weathersit : \newline
 - 1: Clear, Few clouds, Partly cloudy, Partly cloudy \newline
 - 2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist \newline
 - 3: Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds \newline
 - 4: Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fogv \newline
+\newline
 From these boxplots, it's obvious that from weather type 1 - 4, people are becoming more unwillingly to use bike share. This makes sense because commonly speaking, ordinary people would see weather type from 1 - 4 as weather getting worse. And for type 4, it's definitely bad weather.\newline
+\newline
+Box plots for registered and casual users show just the same trend.
 
-### Registered bikeshare users
-```{r}
-ggplot(bs_hour)+
-  geom_boxplot(aes(weathersit,registered,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('Weathersit')+ylab('Hourly records')+
-  labs(fill='Weathersit',title='Registered bikeshare users on different weather')
-```
-### Casual bikeshare users
-```{r}
-ggplot(bs_hour)+
-  geom_boxplot(aes(weathersit,casual,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('Weathersit')+ylab('Hourly records')+
-  labs(fill='Weathersit',title='Casual bikeshare users on different weather')
-```
-
-## Question 3s. Digging deeper into rush hour patterns. Which would affect people's willingness of using bikeshare during rush hours?
-
-## Question 3s - 1. Influence of weathertype
-First let's find out those records during rush hours and likely to be considered as commuting.
+### Material question 3. Influence of weathertype on likely commuters during rush hours
+First let's find out likely commuters (registered users during rush hours on workding days)
 ```{r}
 bs_rush=bs_hour%>%filter(hr %in% c(7,8,9,16,17,18,19))%>%filter(workingday==1)
 bs_rush$hr=as.factor(bs_rush$hr)
 ```
 
-### Total bikeshare users
-```{r}
-ggplot(bs_rush)+
-  geom_boxplot(aes(hr,cnt,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('Hour')+ylab('Hourly records')+
-  labs(fill='Weathersit',title='Hourly distribution of total bikeshare users under different weather')
-```
-**During the rush hours in the morning**, weather type 1 and 2 seems have similar pattern, a little cloudy weather won't affect people's choice in the morning. Only when weather getting worse to type 3 or 4, people would not willing to ride a bike. \newline
-**However during the evening rush hours**, things are different. As the weather getting worse, even a little cloudy would make people not willing to ride a bike. \newline
-What about for casual or registered users?
 
-### Registered bikeshare users
+#### Hourly grouped weather influence
 ```{r}
 ggplot(bs_rush)+
   geom_boxplot(aes(hr,registered,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
   theme_bw()+
   xlab('Hour')+ylab('Hourly records')+
-  labs(fill='Weathersit',title='Hourly distribution of registered bikeshare users under different weather')
-```
-**Similar to total users.**
-
-### Casual bikeshare users
-```{r}
-ggplot(bs_rush)+
-  geom_boxplot(aes(hr,casual,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('Hour')+ylab('Hourly records')+
-  labs(fill='Weathersit',title='Hourly distribution of casual bikeshare users under different weather')
-```
-**Weather influences are similar to total users. While as shown in previous hourly distribution of casual users, casual users are more willing to use bikehsare in the afternoon.**
-
-## Question 3s - 2. Influence of feeling temperature, humidity and windspeed
-In this dataset, all the values of meteorological data are normalized. Which makes us easier to classify them into two levels: high and low (or another medium level).
-```{r}
-f=function(x,a){
-  (max(x)-min(x))*a+min(x)
-}
-bs_rush$atemp_rank=ifelse(bs_rush$atemp>=f(bs_rush$atemp,0.5),'High','Low')%>%as.factor()
-bs_rush$windspeed_rank=ifelse(bs_rush$windspeed>=f(bs_rush$windspeed,0.5),'High','Low')%>%as.factor()
-bs_rush$humi_rank=ifelse(bs_rush$hum>=f(bs_rush$hum,0.5),'High','Low')%>%as.factor()
+  labs(fill='Weathersit',title='Hourly counts of likely commuters under different weather')
 ```
 
-### Total bikeshare users
-```{r}
-ggplot(bs_rush)+
-  geom_boxplot(aes(atemp_rank,cnt,
-                   group=atemp_rank,fill=factor(atemp_rank)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('atemp_rank')+ylab('Hourly records')+
-  labs(fill='Atemp rank',title='Influence of feeling temperature')#+guides(fill=guide_legend(ncol=2))
-```
+**During the rush hours in the morning**, weather type 1 and 2 seems have similar pattern, a little cloudy weather won't affect people's choice in the morning. Only when weather getting worse to type 3 or 4, people would not willing to ride a bike. \newline
+\newline
+**However during the afternoon rush hours**, things are different. As the weather getting worse, even a little cloudy would make people not willing to ride a bike. 
 
-```{r}
-ggplot(bs_rush)+
-  geom_boxplot(aes(windspeed_rank,cnt,
-                   group=windspeed_rank,fill=factor(windspeed_rank)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('windspeed_rank')+ylab('Hourly records')+
-  labs(fill='windspeed rank',title='Influence of wind speed')#+guides(fill=guide_legend(ncol=2))
-```
-```{r}
-ggplot(bs_rush)+
-  geom_boxplot(aes(humi_rank,cnt,
-                   group=humi_rank,fill=factor(humi_rank)),outlier.shape = NA)+
-  theme_bw()+
-  xlab('humi_rank')+ylab('Hourly records')+
-  labs(fill='humidity rank',title='Influence of humidity')#+guides(fill=guide_legend(ncol=2))
-```
+### Regression question
+After discovering this dataset, our group agreed to study the pattern of "likely commuters" which are registered users during rush hours on working days. \newline
+\newline
+We will include related variables to predict the counts of likely commuters. There are multiple regression methods we used, including PCR, ridge and lasso regression to identify which predictors contribute more, meanwhile, linear regression, decision tree, and random forest are also included for a general modeling.
 
-# 3. Random forest regression to predict hourly bikeshare user counts
-
-```{r,out.width='90%'}
-library(randomForest)
-model_table=bs_rush[,-c(1,6,8,14,15,16)]
-str(model_table)
-model_table$season=as.factor(model_table$season)
-model_table$yr=as.factor(model_table$yr)
-model_table$mnth=as.factor(model_table$mnth)
-model_table$weekday=as.factor(model_table$weekday)
-model_table$weathersit=as.factor(model_table$weathersit)
-
-set.seed(1)
-train_rows=sample(nrow(model_table),dim(model_table)[1]*0.7)
-train_set=model_table[train_rows,]
-test_set=model_table[-train_rows,]
-test_x=test_set[,-11]
-test_y=test_set[,11]
-cnt.rf <- randomForest(cnt ~ ., data = train_set,
-                         importance = TRUE,ntree=400,xtest=test_x,ytest=test_y$cnt,
-                         keep.forest=TRUE)
-print(cnt.rf)
-plot(cnt.rf)
-y_pred=predict(cnt.rf,test_x)
-table=cbind(y_pred,test_y$cnt)%>%as.data.frame()
-colnames(table)=c('y_pred','y_true')
-ggplot(table)+geom_point(aes(y_pred,y_true))+geom_abline(slope=1,intercept=0,color='red')
-```
-
-```{r,out.width='90%'}
-#30 most important attributes
-varImpPlot(cnt.rf, n.var = min(30, nrow(cnt.rf$importance)),
-main = 'Top 30 - variable importance')
-```
-
-```{r}
-library(nlme)
-frm.1 = formula(cnt~season+yr+mnth+hr+weekday+
-                  weathersit+temp+atemp+hum+windspeed+
-                  atemp_rank+windspeed_rank+humi_rank)
-lme.cnt = lme(frm.1,
-             control = lmeControl(opt = "optim"),
-             random=list(~1|hr),
-             data = model_table)
-fittedpm <- data.frame(lme.cnt$fitted)
-# performance at model fitting : 
-result_table=cbind(model_table$cnt,fittedpm$hr)%>%as.data.frame()
-
-thisMSE <- sum((fittedpm[,2]-model_table[,11])^2)/(nrow(fittedpm))
-thisRMSE <- sqrt(thisMSE)
-thisR2 <- 1 - (sum((model_table[,11]-fittedpm[,2])^2)/
-                 sum((model_table[,11]-mean(model_table$cnt))^2))
-thisR2
-colnames(result_table)=c('y_true','y_pred')
-ggplot(result_table)+geom_point(aes(y_pred,y_true))+geom_abline(slope=1,intercept=0,color='red')
-```
-
-# Re: Comparing the R^2 values of a simple linear regression, decision tree, and random forest
+### Methods group 1: linear regression, decision tree, and random forest
 
 ```{r}
 library(leaps)
@@ -326,7 +180,7 @@ hour.filtered <- subset(hour.filtered, hr %in% c(7,8,9,16,17,18,19))
 hour <- hour.filtered[,c("mnth","hr","atemp","weathersit","hum","windspeed","registered")]
 ```
 
-# Performing a linear regression, and getting the R^2 value.
+#### Performing a linear regression, and getting the R^2 value.
 
 ```{r}
 hour.lm <- lm(registered ~ ., data = hour)
@@ -336,7 +190,7 @@ hour.lm.r2
 
 The r-squared value for linear regression is 0.245, meaning 24.5% of the error is explained by the model. 
 
-# Performing a decision tree analysis and getting the R^2 value. 
+#### Performing a decision tree analysis and getting the R^2 value. 
 ```{r}
 set.seed(1)
 train.hour <- sample(1:nrow(hour), nrow(hour) / 2)
@@ -365,7 +219,7 @@ tree.hour.r2
 
 The R^2 value is 0.540, meaning 54.0% of the error is explained by the model. 
 
-# Performing a random forest and getting the R^2 value.
+#### Performing a random forest and getting the R^2 value.
 
 ```{r}
 set.seed(2)
@@ -392,9 +246,9 @@ rf.hour.rsq
 
 The R^2 value is 0.658, meaning 65.8% of the error is explained by the model. 
 
+### Methods group 2: PCR, ridge and lasso regression.
 
-
-# data processing
+##### data processing
 ```{r}
 set.seed(1)
 
@@ -413,7 +267,7 @@ indice_train = sample(seq_len(nrow(regression_model)),size = 0.2*nrow(regression
 indice_test =  seq_len(nrow(regression_model)) %>%
 setdiff(indice_train)
 ```
-#pcr
+#### pcr
 ```{r}
 # fit pcr on training set
 pcr = pcr(registered ~ ., data = regression_model,subset = indice_train)
@@ -431,7 +285,7 @@ pred_error_all = sapply(
 # find which M minimizes prediction error
 pcr$coefficients[, , which.min(pred_error_all)]
 ```
-#ridge
+#### ridge
 ```{r}
 # cross validation based tuning of lambda
 #cv glmnet implement already 10 cross validation
@@ -459,7 +313,7 @@ r2
 ```{r}
 coef(ridgefit)
 ```
-# lasso
+#### lasso
 ```{r}
 # cross validation based tuning of lambda
 lasso=  cv.glmnet(
@@ -487,3 +341,9 @@ r2
 ```{r}
 coef(lassofit)
 ```
+
+## 4. Conclusion
+... 
+
+## 5. Author contributions
+...
