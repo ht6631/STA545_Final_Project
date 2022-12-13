@@ -2,7 +2,7 @@
 title: "Final Project - Group 14"
 authors: |
     | Andrew Schuck, Charlotte Milard, Hang Tian
-    | UB PERSON IDs: ,,50413372
+    | UB PERSON IDs: 50469241,50477883,50413372
 date: "`r Sys.Date()`"
 output: pdf_document
 urlcolor: blue
@@ -17,8 +17,8 @@ This term project paper is saved on GitHub repository for better
 co-working. [Here](https://github.com/ht6631/STA545_Final_Project) is the link.
 
 # 1. Abstract
-
 Various models were applied to bikesharing data, which was very noisy and non-linear to various variables. Notably, linear models were not successful at describing the hour variable, but multiple models said that it was an important factor. Some success what found by reclassifying the hour variable, but it was still difficult to cut through all the noise. 
+
 # 2. Introduction
 
 ## a. Data description
