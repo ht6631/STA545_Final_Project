@@ -281,7 +281,7 @@ model.
 
 ### Methods group 2: PCR, ridge and lasso regression.
 
-#### data processing
+# data processing
 
 ```{r}
 set.seed(1)
@@ -302,7 +302,7 @@ indice_test =  seq_len(nrow(regression_model)) %>%
 setdiff(indice_train)
 ```
 
-#### pcr
+#### Performing a Principal Component Regression and getting the R\^2 value
 
 ```{r}
 # fit pcr on training set
@@ -313,7 +313,9 @@ y_prediction_pcr = predict(pcr, regression_model[indice_test, ])
 validationplot(pcr, val.type = "R2")
 ```
 
-If we use the 7 variables, we obtain r2 =0,25
+We fit the principal component regression model with all possible values of components on the training dataset ; in order to find  the number of components that maximize the value of R^2.
+We found that if we have a number of components egals to 7 which means we keep all our components, we have an optimal r-squared value.
+For the PCR regression model, the r-squared value is around 0.25 which means that the model describes around 25% of the variance.
 
 ```{r}
 
@@ -324,7 +326,9 @@ pred_error_all = sapply(
 pcr$coefficients[, , which.min(pred_error_all)]
 ```
 
-#### ridge
+For this model, the variables atemp, month and hour have the highest coefficient values.
+
+#### Performing a ridge regression and getting the R\^2 value
 
 ```{r}
 # cross validation based tuning of lambda
@@ -350,12 +354,16 @@ sse =sum((y_pred_ridge - regression_model$registered)^2)
 r2 = 1 - (sse/sst)
 r2
 ```
+We fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter λ. 
+We also used the rstudio function cv.glmet which use cross validation to perform the tuning. 
+The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
 
 ```{r}
 coef(ridgefit)
 ```
+The ridge model use all the predictors ; the variable atemp has the highest coefficient value.
 
-#### lasso
+#### Performing a lasso regression and getting the R\^2 value
 
 ```{r}
 # cross validation based tuning of lambda
@@ -381,10 +389,15 @@ sse =sum((pred_lasso - regression_model$registered)^2)
 r2 = 1 - (sse/sst)
 r2
 ```
+we fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter λ. 
+We also used the rstudio function cv.glmet which use cross validation to perform the tuning. 
+The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
 
 ```{r}
 coef(lassofit)
 ```
+The lasso model does not use the variable hour, weekday and windspeed.
+the variable atemp has the highest coefficient value.
 
 # Attempting a categorical subset of the hours. 
 
