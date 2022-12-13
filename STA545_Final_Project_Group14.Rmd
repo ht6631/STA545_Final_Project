@@ -385,6 +385,42 @@ r2
 coef(lassofit)
 ```
 
+# Attempting a categorical subset of the hours. 
+
+We will try to approach a way to make linear models more effective by classifying the hours better. It is clear based on previous variable importance tests that "hours" is a very important variable, but based on how it is coded (incrementing one for every subsequent hour) instead of grouped in a more reasonable way.
+
+Regrouping hour such that: 
+
+7AM to 9AM and 4PM to 7PM is rush hour, coded as 3.
+10 AM to 3PM is midday, coded as 2.
+5 AM to 6 AM and 8PM to 11PM is odd hours, coded as 1. 
+12AM to 4 AM is night, coded as 0.
+
+This is still only concerned with working days. 
+```{r}
+hour_orig <- read_csv('Bike-Sharing-Dataset/hour.csv',show_col_types = FALSE);
+
+hour.filtered <- subset(hour_orig, workingday >.5)
+hour.filtered1 <- hour.filtered %>% mutate(hr_type = case_when(hr < 4.5 ~ 0,
+  hr < 6.5 ~ 1,
+  hr < 9.5 ~ 3,
+  hr < 15.5 ~ 2,
+  hr < 19.5 ~ 3,
+  hr < 23.5 ~ 1)) 
+
+hour <- hour.filtered1[,c("mnth","hr_type","atemp","weathersit","hum","windspeed","registered")]
+```
+
+Now, to run a simple linear model. 
+
+```{r}
+hour.lm <- lm(registered ~ ., data = hour)
+hour.lm.r2 <- summary(hour.lm)$r.squared
+hour.lm.r2
+```
+
+With SLR giving an R^2 value of 55.9, that's significantly better than the original model, though not quite as good as random forest, implying that the non-linearity of the data is still significant. 
+
 # 4. Conclusion
 
 ## a. Which predictor affects dependent variable more?
@@ -425,3 +461,7 @@ regression modeling not performing well.
 
 Project report: structure building; data description, plots part;
 \newline Github repository creating;
+
+## Andrew: 
+
+SLR, Decision Tree, and Random Forest, as well as reclassifying the hour into new classes, and all the analysis therein. 
