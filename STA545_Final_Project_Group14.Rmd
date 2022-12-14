@@ -1,6 +1,6 @@
 ---
 title: "Final Project - Group 14"
-authors: |
+author: |
     | Andrew Schuck, Charlotte Milard, Hang Tian
     | UB PERSON IDs: 50469241,50477883,50413372
 date: "`r Sys.Date()`"
@@ -13,11 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 set.seed(1) # seed for any random generation
 ```
 
-This term project paper is saved on GitHub repository for better
-co-working. [Here](https://github.com/ht6631/STA545_Final_Project) is the link.
+This term project paper is saved on GitHub repository for better co-working. [Here](https://github.com/ht6631/STA545_Final_Project) is the link.
 
 # 1. Abstract
-Various models were applied to bikesharing data, which was very noisy and non-linear to various variables. Notably, linear models were not successful at describing the hour variable, but multiple models said that it was an important factor. Some success what found by reclassifying the hour variable, but it was still difficult to cut through all the noise. 
+
+Various models were applied to bikesharing data, which was very noisy and non-linear to various variables. Notably, linear models were not successful at describing the hour variable, but multiple models said that it was an important factor. Some success what found by reclassifying the hour variable, but it was still difficult to cut through all the noise.
 
 # 2. Introduction
 
@@ -67,10 +67,7 @@ cor(bs_hour[, -c(1,16)]) %>%
   corrplot::corrplot()
 ```
 
-From these plots, it seems counts of total bikeshare users have slight
-positive correlation with time information like "hr" (hour), similar
-situations are seen for feeling temperature and temperature. While for
-"hum" which is humidity, there is a negative correlation.
+From these plots, it seems counts of total bikeshare users have slight positive correlation with time information like "hr" (hour), similar situations are seen for feeling temperature and temperature. While for "hum" which is humidity, there is a negative correlation.
 
 ## b. Materials and methods.
 
@@ -79,6 +76,7 @@ First, our group discovered this data set for some useful information.
 ### Material question 1. Would the hourly distributions of bikeshare users on working days / non-working days different, and what about casual / registered users?
 
 #### Total bikeshare users
+
 ```{r,echo=FALSE,out.width='70%',fig.align='center'}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,cnt,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -88,15 +86,10 @@ ggplot(bs_hour)+
   scale_x_continuous(breaks=seq(0,24,2))
 ```
 
-**The answer is Yes.** \newline \*\*Before 6am,\*\* there are a few bike
-share users for both working-day types while more people on non-working
-days tend to use bike share from 0am to 2am. \newline \*\*From 6am to
-11pm,\*\* Two peaks of users are shown around 8am and 5pm on working
-days, which may reflect commuting during the rush hours. While on
-non-working days, we saw a smooth increasing then decreasing trend on
-bike share users.\newline
+**The answer is Yes.** \newline \*\*Before 6am,\*\* there are a few bike share users for both working-day types while more people on non-working days tend to use bike share from 0am to 2am. \newline \*\*From 6am to 11pm,\*\* Two peaks of users are shown around 8am and 5pm on working days, which may reflect commuting during the rush hours. While on non-working days, we saw a smooth increasing then decreasing trend on bike share users.\newline
 
 #### Registered bikeshare users
+
 ```{r,echo=FALSE,out.width='70%',fig.align='center'}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,registered,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -106,10 +99,10 @@ ggplot(bs_hour)+
   scale_x_continuous(breaks=seq(0,24,2))
 ```
 
-**The hourly distribution of registered users are quite like that of the
-total users.**
+**The hourly distribution of registered users are quite like that of the total users.**
 
 #### Casual bikeshare users
+
 ```{r,echo=FALSE,out.width='70%',fig.align='center'}
 ggplot(bs_hour)+
   geom_boxplot(aes(hr,casual,group=interaction(workingday,hr),fill=factor(workingday)),outlier.shape = NA)+
@@ -119,13 +112,12 @@ ggplot(bs_hour)+
   scale_x_continuous(breaks=seq(0,24,2))
 ```
 
-**Casual users tend to use bikeshare more often on non-workding days
-while there is no strong evidence they would use bikeshare for commuting
-on rush hours.**
+**Casual users tend to use bikeshare more often on non-workding days while there is no strong evidence they would use bikeshare for commuting on rush hours.**
 
 ### Material question 2. Would bikeshare users counts on different weather be different, and what about casual / registered users?
 
 #### Total bikeshare users
+
 ```{r,echo=FALSE,out.width='80%',fig.align='center'}
 ggplot(bs_hour)+
   geom_boxplot(aes(weathersit,cnt,group=factor(weathersit),fill=factor(weathersit)),outlier.shape = NA)+
@@ -134,29 +126,19 @@ ggplot(bs_hour)+
   labs(fill='Weathersit',title='Total bikeshare users on different weather')
 ```
 
-**Here's the description for weather type 1 - 4:** \newline weathersit :
-\newline - 1: Clear, Few clouds, Partly cloudy, Partly cloudy \newline -
-2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist
-\newline - 3: Light Snow, Light Rain + Thunderstorm + Scattered clouds,
-Light Rain + Scattered clouds \newline - 4: Heavy Rain + Ice Pallets +
-Thunderstorm + Mist, Snow + Fogv \newline \newline From these boxplots,
-it's obvious that from weather type 1 - 4, people are becoming more
-unwillingly to use bike share. This makes sense because commonly
-speaking, ordinary people would see weather type from 1 - 4 as weather
-getting worse. And for type 4, it's definitely bad weather.\newline
-\newline Box plots for registered and casual users show just the same
-trend.
+**Here's the description for weather type 1 - 4:** \newline weathersit : \newline - 1: Clear, Few clouds, Partly cloudy, Partly cloudy \newline - 2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist \newline - 3: Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds \newline - 4: Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fogv \newline \newline From these boxplots, it's obvious that from weather type 1 - 4, people are becoming more unwillingly to use bike share. This makes sense because commonly speaking, ordinary people would see weather type from 1 - 4 as weather getting worse. And for type 4, it's definitely bad weather.\newline \newline Box plots for registered and casual users show just the same trend.
 
 ### Material question 3. Influence of weathertype on likely commuters during rush hours
 
-First let's find out likely commuters (registered users during rush
-hours on workding days)
+First let's find out likely commuters (registered users during rush hours on workding days)
+
 ```{r}
 bs_rush=bs_hour%>%filter(hr %in% c(7,8,9,16,17,18,19))%>%filter(workingday==1)
 bs_rush$hr=as.factor(bs_rush$hr)
 ```
 
 #### Hourly grouped weather influence
+
 ```{r,echo=FALSE,out.width='80%',fig.align='center'}
 ggplot(bs_rush)+
   geom_boxplot(aes(hr,registered,group=interaction(weathersit,hr),fill=factor(weathersit)),outlier.shape = NA)+
@@ -165,23 +147,11 @@ ggplot(bs_rush)+
   labs(fill='Weathersit',title='Hourly counts of likely commuters under different weather')
 ```
 
-**During the rush hours in the morning**, weather type 1 and 2 seems
-have similar pattern, a little cloudy weather won't affect people's
-choice in the morning. Only when weather getting worse to type 3 or 4,
-people would not willing to ride a bike. \newline \newline \*\*However
-during the afternoon rush hours\*\*, things are different. As the
-weather getting worse, even a little cloudy would make people not
-willing to ride a bike.
+**During the rush hours in the morning**, weather type 1 and 2 seems have similar pattern, a little cloudy weather won't affect people's choice in the morning. Only when weather getting worse to type 3 or 4, people would not willing to ride a bike. \newline \newline \*\*However during the afternoon rush hours\*\*, things are different. As the weather getting worse, even a little cloudy would make people not willing to ride a bike.
 
 ## c. Regression question
 
-After discovering this dataset, our group agreed to study the pattern of
-"likely commuters" which are registered users during rush hours on
-working days. \newline \newline We will include related variables to
-predict the counts of likely commuters. There are multiple regression
-methods we used, including PCR, ridge and lasso regression to identify
-which predictors contribute more, meanwhile, linear regression, decision
-tree, and random forest are also included for a general modeling.
+After discovering this dataset, our group agreed to study the pattern of "likely commuters" which are registered users during rush hours on working days. \newline \newline We will include related variables to predict the counts of likely commuters. There are multiple regression methods we used, including PCR, ridge and lasso regression to identify which predictors contribute more, meanwhile, linear regression, decision tree, and random forest are also included for a general modeling.
 
 ### Methods group 1: linear regression, decision tree, and random forest
 
@@ -217,8 +187,7 @@ hour.lm.r2 <- summary(hour.lm)$r.squared
 hour.lm.r2
 ```
 
-The r-squared value for linear regression is 0.245, meaning 24.5% of the
-error is explained by the model.
+The r-squared value for linear regression is 0.245, meaning 24.5% of the error is explained by the model.
 
 #### Performing a decision tree analysis and getting the R\^2 value.
 
@@ -248,8 +217,7 @@ tree.hour.r2 <- tree.hour.r2.table[11,1]
 tree.hour.r2
 ```
 
-The R\^2 value is 0.540, meaning 54.0% of the error is explained by the
-model.
+The R\^2 value is 0.540, meaning 54.0% of the error is explained by the model.
 
 #### Performing a random forest and getting the R\^2 value.
 
@@ -276,16 +244,14 @@ rf.hour.rsq <- rf.hour.rsq.list[5000]
 rf.hour.rsq
 ```
 
-The R\^2 value is 0.658, meaning 65.8% of the error is explained by the
-model.
+The R\^2 value is 0.658, meaning 65.8% of the error is explained by the model.
 
 ### Methods group 2: PCR, ridge and lasso regression.
 
-# data processing
+#### data processing
 
-```{r}
+```{r,fig.align='center'}
 set.seed(1)
-
 regression_model=bs_hour%>%filter(hr %in% c(7,8,9,16,17,18,19))%>%filter(workingday==1)
 regression_model=regression_model[,-which(names(regression_model) == "dteday")]
 regression_model=regression_model[,-which(names(regression_model) == "season")]
@@ -304,7 +270,7 @@ setdiff(indice_train)
 
 #### Performing a Principal Component Regression and getting the R\^2 value
 
-```{r}
+```{r,fig.align='center'}
 # fit pcr on training set
 pcr = pcr(registered ~ ., data = regression_model,subset = indice_train)
 y_prediction_pcr = predict(pcr, regression_model[indice_test, ])
@@ -313,12 +279,9 @@ y_prediction_pcr = predict(pcr, regression_model[indice_test, ])
 validationplot(pcr, val.type = "R2")
 ```
 
-We fit the principal component regression model with all possible values of components on the training dataset ; in order to find  the number of components that maximize the value of R^2.
-We found that if we have a number of components egals to 7 which means we keep all our components, we have an optimal r-squared value.
-For the PCR regression model, the r-squared value is around 0.25 which means that the model describes around 25% of the variance.
+We fit the principal component regression model with all possible values of components on the training dataset ; in order to find the number of components that maximize the value of R\^2. We found that if we have a number of components egals to 7 which means we keep all our components, we have an optimal r-squared value. For the PCR regression model, the r-squared value is around 0.25 which means that the model describes around 25% of the variance.
 
 ```{r}
-
 pred_error_all = sapply(
   1:6,
   function(i) mean((y_prediction_pcr[, , i] - regression_model[indice_test ,]$registered)^2))
@@ -354,13 +317,13 @@ sse =sum((y_pred_ridge - regression_model$registered)^2)
 r2 = 1 - (sse/sst)
 r2
 ```
-We fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter λ. 
-We also used the rstudio function cv.glmet which use cross validation to perform the tuning. 
-The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
+
+We fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter lambda. We also used the rstudio function cv.glmet which use cross validation to perform the tuning. The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
 
 ```{r}
 coef(ridgefit)
 ```
+
 The ridge model use all the predictors ; the variable atemp has the highest coefficient value.
 
 #### Performing a lasso regression and getting the R\^2 value
@@ -389,28 +352,25 @@ sse =sum((pred_lasso - regression_model$registered)^2)
 r2 = 1 - (sse/sst)
 r2
 ```
-we fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter λ. 
-We also used the rstudio function cv.glmet which use cross validation to perform the tuning. 
-The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
+
+we fit the ridge model on the training data with an optimally tuned ridge shrinkage parameter lambda. We also used the rstudio function cv.glmet which use cross validation to perform the tuning. The R\^2 value is 0.22, meaning 22.0% of the error is explained by the model.
 
 ```{r}
 coef(lassofit)
 ```
-The lasso model does not use the variable hour, weekday and windspeed.
-the variable atemp has the highest coefficient value.
 
-# Attempting a categorical subset of the hours. 
+The lasso model does not use the variable hour, weekday and windspeed. the variable atemp has the highest coefficient value.
+
+#### Attempting a categorical subset of the hours.
 
 We will try to approach a way to make linear models more effective by classifying the hours better. It is clear based on previous variable importance tests that "hours" is a very important variable, but based on how it is coded (incrementing one for every subsequent hour) instead of grouped in a more reasonable way.
 
-Regrouping hour such that: 
+Regrouping hour such that:
 
-7AM to 9AM and 4PM to 7PM is rush hour, coded as 3.
-10 AM to 3PM is midday, coded as 2.
-5 AM to 6 AM and 8PM to 11PM is odd hours, coded as 1. 
-12AM to 4 AM is night, coded as 0.
+7AM to 9AM and 4PM to 7PM is rush hour, coded as 3. 10 AM to 3PM is midday, coded as 2. 5 AM to 6 AM and 8PM to 11PM is odd hours, coded as 1. 12AM to 4 AM is night, coded as 0.
 
-This is still only concerned with working days. 
+This is still only concerned with working days.
+
 ```{r}
 hour_orig <- read_csv('Bike-Sharing-Dataset/hour.csv',show_col_types = FALSE);
 
@@ -425,7 +385,7 @@ hour.filtered1 <- hour.filtered %>% mutate(hr_type = case_when(hr < 4.5 ~ 0,
 hour <- hour.filtered1[,c("mnth","hr_type","atemp","weathersit","hum","windspeed","registered")]
 ```
 
-Now, to run a simple linear model. 
+Now, to run a simple linear model.
 
 ```{r}
 hour.lm <- lm(registered ~ ., data = hour)
@@ -433,53 +393,34 @@ hour.lm.r2 <- summary(hour.lm)$r.squared
 hour.lm.r2
 ```
 
-With SLR giving an R^2 value of 55.9, that's significantly better than the original model, though not quite as good as random forest, implying that the non-linearity of the data is still significant. 
+With SLR giving an R\^2 value of 55.9, that's significantly better than the original model, though not quite as good as random forest, implying that the non-linearity of the data is still significant.
 
 # 4. Conclusion
 
 ## a. Which predictor affects dependent variable more?
 
-Though it's shown to have little influence on the count of registered
-users in linear regression, Ridge, PCR and Lasso, "hr" which is the hour
-predictor actually explains much of the variation of dependent variable
-under a non-linear method like tree-based regression and random forest.
-Using "hr" as an factor to fit multiple parallel linear regression model
-with different intercept would be a solution for a better fit. \newline
-\newline Not surprisingly, the feeling temperature does contribute a lot
-on likely commuters' choice, which is seen by all the linear models and
-tree-based methods. And followed are predictors like humidity, month and
-weather type. Wind speed shows little influence on dependent variable
-estimation in random forest modeling while it's been excluded in Lasso
-with "weekday"\newline \newline
+Though it's shown to have little influence on the count of registered users in linear regression, Ridge, PCR and Lasso, "hr" which is the hour predictor actually explains much of the variation of dependent variable under a non-linear method like tree-based regression and random forest. Using "hr" as an factor to fit multiple parallel linear regression model with different intercept would be a solution for a better fit. \newline \newline Not surprisingly, the feeling temperature does contribute a lot on likely commuters' choice, which is seen by all the linear models and tree-based methods. And followed are predictors like humidity, month and weather type. Wind speed shows little influence on dependent variable estimation in random forest modeling while it's been excluded in Lasso with "weekday"\newline \newline
 
 ## b. Explanation to low variation explained.
 
-In the regression part, our group used 7 predictors for a general model
-to explain which predictor affects the number of likely commuters,
-excluding time information like "yr" (year) and redundant information
-like temperature (because we included feeling temperature). However, an
-increasing of total bikeshare users could be seen from the first year to
-the second, as shown in next boxplots.
+In the regression part, our group used 7 predictors for a general model to explain which predictor affects the number of likely commuters, excluding time information like "yr" (year) and redundant information like temperature (because we included feeling temperature). However, an increasing of total bikeshare users could be seen from the first year to the second, as shown in next boxplots.
 
 ```{r, echo=FALSE}
 knitr::include_graphics('Plots/Hourly counts of total bikeshare users between 2 years.png')
 ```
 
-Thus, combined with the fact that relations between independent and
-dependent variables are quite non-linear, it's understandable that our
-regression modeling not performing well.
+Thus, combined with the fact that relations between independent and dependent variables are quite non-linear, it's understandable that our regression modeling not performing well.
 
 # 5. Author contributions
 
 ## Hang:
 
-Project report: structure building; data description, plots part;
-\newline Github repository creating;
+Project report: structure building; data description, plots part; \newline Github repository creating;
 
-## Andrew: 
+## Andrew:
 
-SLR, Decision Tree, and Random Forest, as well as reclassifying the hour into new classes, and all the analysis therein. 
+SLR, Decision Tree, and Random Forest, as well as reclassifying the hour into new classes, and all the analysis therein.
 
-## Charlotte 
+## Charlotte
 
-PCR Analysis, Ridge, LASSO, and the analysis therein. 
+PCR Analysis, Ridge, LASSO, and the analysis therein.
