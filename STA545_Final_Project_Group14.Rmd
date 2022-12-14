@@ -13,7 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 set.seed(1) # seed for any random generation
 ```
 
-This term project paper is saved on GitHub repository for better co-working. [Here](https://github.com/ht6631/STA545_Final_Project) is the link.
+# Github Repository
+
+This term project paper is saved on GitHub repository for better co-working. [Here](https://github.com/ht6631/STA545_Final_Project) is the link. \newline
+Website: https://github.com/ht6631/STA545_Final_Project
 
 # 1. Abstract
 
